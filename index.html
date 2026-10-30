@@ -1,177 +1,424 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1769aa">
-<title>Meine Arbeitszeit</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Meine Arbeitszeit">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Meine Arbeitszeit 2.0</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;padding:20px 12px;background:#edf3f9;color:#17283b;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-main{max-width:480px;margin:auto;background:white;padding:22px;border-radius:22px;box-shadow:0 5px 25px #0001}
-h1{font-size:23px;margin:0 0 8px}
+body{margin:0;background:#edf3f9;color:#182b3e;font:16px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:16px 12px 40px}
+main{max-width:510px;margin:auto;background:white;padding:20px;border-radius:22px;box-shadow:0 6px 25px #0001}
+h1{font-size:23px;margin:0 0 6px}
 h2{font-size:19px}
-small,.hint{color:#68788a}
-nav{display:flex;gap:8px;margin:22px 0}
-button{cursor:pointer;border:0;border-radius:10px;padding:12px;background:#1769aa;color:white;font-size:15px;font-weight:600}
-nav button{flex:1;background:#eaf0f6;color:#36516c}
+small,.muted{color:#617589}
+nav,.grid,.stats,.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+nav{margin:20px 0}
+button{font:inherit;font-weight:600;background:#1769aa;color:white;border:0;border-radius:10px;padding:12px;cursor:pointer}
+button.secondary,nav button{background:#eaf0f6;color:#205c91}
 nav button.active{background:#1769aa;color:white}
 label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px}
-input,select{width:100%;padding:12px 8px;border:1px solid #cad6e3;border-radius:9px;background:white;font-size:16px;min-width:0}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.result{text-align:center;background:#eaf5ff;border-radius:15px;padding:22px 8px;margin:20px 0}
-.result strong{display:block;font-size:42px;color:#1769aa;margin:8px}
-.full{width:100%;margin:6px 0}
-.secondary{background:#eaf0f6;color:#1769aa}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
-.stat{background:#f2f6fa;padding:13px;border-radius:12px}
-.stat strong{display:block;font-size:22px;margin-top:6px}
-.entry{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 0;border-bottom:1px solid #e5ebf0}
-.entry button{padding:8px;background:#eaf0f6;color:#1769aa}
-.entry small{display:block;margin-top:5px}
+input,select{width:100%;min-width:0;padding:11px;border:1px solid #cbd8e5;border-radius:9px;background:white;font-size:16px}
+.card{background:#edf6ff;padding:18px;border-radius:14px;text-align:center;margin:16px 0}
+.card strong{display:block;font-size:40px;color:#1769aa;margin:5px}
+.stats{margin:15px 0}
+.stat{padding:12px;background:#f2f6fa;border-radius:12px}
+.stat strong{display:block;font-size:21px;margin-top:6px}
+.full{width:100%;margin:8px 0}
 .hidden{display:none}
-.hint{font-size:12px;line-height:1.5;margin-top:20px}
+.entry{padding:12px 0;border-bottom:1px solid #e1e9f0;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.entry small{display:block;margin-top:5px}
+.entry button{padding:8px;margin-left:4px}
+.warning{color:#9c5500;background:#fff3d9;border-radius:10px;padding:10px;font-size:13px}
+.good{color:#16653b}
+.bad{color:#aa2e36}
+.hint{font-size:12px;line-height:1.5;color:#617589}
+.section{border-top:1px solid #e1e9f0;margin-top:18px;padding-top:12px}
+.buttonrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.buttonrow button{font-size:13px}
+#status{font-size:13px;margin-top:8px}
+input[type=file]{font-size:13px}
 </style>
 </head>
 <body>
 <main>
-<h1>🕒 Meine Arbeitszeit</h1>
-<small>Dein täglicher Feierabend auf einen Blick</small>
+<h1>🕒 Meine Arbeitszeit 2.0</h1>
+<small>Dein Arbeitstag, deine Zeitbilanz</small>
 <nav>
-<button id="tab1" class="active" onclick="tab('today')">Heute</button>
-<button id="tab2" onclick="tab('month')">Monatsübersicht</button>
+<button id="tabDay" class="active" onclick="tab('day')">Arbeitstag</button>
+<button id="tabMonth" onclick="tab('month')">Monat & Backup</button>
 </nav>
 
-<section id="today">
+<section id="day">
 <label>Datum</label>
 <input id="date" type="date">
 <div class="grid">
-<div><label>Arbeitsbeginn</label><input id="start" type="time" value="08:18"></div>
-<div><label>Sollarbeitszeit</label>
+<div>
+<label>Arbeitsbeginn</label>
+<input id="start" type="time">
+</div>
+<div>
+<label>Sollarbeitszeit</label>
 <select id="target">
 <option value="480">8 Stunden</option>
 <option value="450">7,5 Stunden</option>
 <option value="420">7 Stunden</option>
 <option value="360">6 Stunden</option>
-</select></div>
-<div><label>Pausenbeginn</label><input id="bs" type="time" value="12:05"></div>
-<div><label>Pausenende</label><input id="be" type="time" value="12:40"></div>
+</select>
 </div>
-<div class="result">
-<small>Dein berechneter Feierabend</small>
-<strong id="finish">16:53</strong>
-<small id="details"></small>
+<div>
+<label>Pausenbeginn</label>
+<input id="bs" type="time">
+</div>
+<div>
+<label>Pausenende</label>
+<input id="be" type="time">
+</div>
+</div>
+<label>Tatsächlicher Feierabend (optional)</label>
+<input id="actual" type="time">
+<div class="card">
+<small>Geplanter Feierabend</small>
+<strong id="planned">–</strong>
+<div id="result">Uhrzeiten eingeben</div>
+</div>
+<div id="breakWarning" class="warning hidden"></div>
+<div class="buttonrow">
+<button onclick="stamp('start')">▶ Arbeitsbeginn jetzt</button>
+<button onclick="stamp('bs')">☕ Pause starten</button>
+<button onclick="stamp('be')">↩ Pause beenden</button>
+<button onclick="stamp('actual')">✓ Feierabend jetzt</button>
 </div>
 <button class="full" onclick="save()">Arbeitstag speichern</button>
-<button class="full secondary" onclick="reset()">Neuen Tag eingeben</button>
+<button class="full secondary" onclick="newDay()">Neuen Tag eingeben</button>
+<p class="hint">Die Jetzt-Buttons tragen die aktuelle Uhrzeit ein. Speichere den Arbeitstag anschließend. Die Pausenprüfung berücksichtigt die deutsche gesetzliche Mindestpause als Orientierung.</p>
 </section>
 
 <section id="month" class="hidden">
 <h2>Monatsübersicht</h2>
-<label>Monat auswählen</label>
+<label>Monat</label>
 <input id="monthPicker" type="month" onchange="render()">
 <div class="stats">
-<div class="stat"><small>Erfasste Tage</small><strong id="days">0</strong></div>
-<div class="stat"><small>Sollstunden</small><strong id="hours">0:00</strong></div>
-<div class="stat"><small>Pausen gesamt</small><strong id="breaks">0:00</strong></div>
-<div class="stat"><small>Überstunden</small><strong>–</strong></div>
+<div class="stat">
+<small>Erfasste Tage</small>
+<strong id="days">0</strong>
 </div>
+<div class="stat">
+<small>Sollstunden</small>
+<strong id="targetHours">0:00</strong>
+</div>
+<div class="stat">
+<small>Iststunden*</small>
+<strong id="actualHours">0:00</strong>
+</div>
+<div class="stat">
+<small>Zeitsaldo*</small>
+<strong id="balance">0:00</strong>
+</div>
+</div>
+<p class="hint">* Nur Tage mit tatsächlicher Feierabendzeit zählen zur Istzeit und zum Zeitsaldo. Fehlende Istzeiten werden nicht als Minusstunden gewertet.</p>
 <div id="entries"></div>
-<button class="full secondary" onclick="exportCSV()">CSV für Excel exportieren</button>
-<p class="hint">Überstunden können erst ermittelt werden, wenn zusätzlich die tatsächliche Endzeit erfasst wird.</p>
+<button class="full secondary" onclick="exportCSV()">Monat als CSV exportieren</button>
+<div class="section">
+<h2>Datensicherung</h2>
+<p class="hint">Sichere alle Monate als JSON-Datei. Import ergänzt bzw. aktualisiert Einträge mit gleichem Datum nach Bestätigung.</p>
+<button class="full" onclick="backup()">Vollständiges JSON-Backup erstellen</button>
+<label>JSON-Backup wiederherstellen</label>
+<input id="importFile" type="file" accept=".json,application/json" onchange="restore(event)">
+<p id="status" aria-live="polite"></p>
+</div>
 </section>
-<p class="hint">Deine Daten werden lokal auf diesem Gerät gespeichert. Exportiere sie regelmäßig als Sicherung. Beim Löschen der Browserdaten können Einträge verloren gehen.</p>
+<p class="hint">Alle Arbeitszeiten bleiben lokal auf diesem Gerät. Löschen der Website-Daten oder ein Gerätewechsel kann die Daten entfernen. Bitte regelmäßig Backups erstellen. Bei privaten Geräten keine sensiblen Daten in öffentliche GitHub-Dateien hochladen.</p>
 </main>
+
 <script>
-const el=id=>document.getElementById(id);
-const key="arbeitszeit-daten-v1";
-const today=()=>{
-let d=new Date();
-return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+'use strict';
+const KEY='arbeitszeit-daten-v1', $=id=>document.getElementById(id);
+let db={};
+
+const dateToday=()=>{
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 };
-const minutes=s=>{
-if(!/^\d\d:\d\d$/.test(s||""))return NaN;
-let [h,m]=s.split(":").map(Number);
-return h<24&&m<60?h*60+m:NaN;
+
+const mins=s=>{
+  if(!/^\d\d:\d\d$/.test(s||''))return NaN;
+  const [h,m]=s.split(':').map(Number);
+  return h<24&&m<60?h*60+m:NaN;
 };
-const clock=n=>String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0");
-const duration=n=>Math.floor(n/60)+":"+String(n%60).padStart(2,"0");
-function data(){try{return JSON.parse(localStorage.getItem(key))||{}}catch{return {}}}
-function calculate(){
-let s=minutes(el("start").value),b=minutes(el("bs").value),e=minutes(el("be").value),t=Number(el("target").value);
-if(![s,b,e,t].every(Number.isFinite)||s>b||b>e||s+t+e-b>=1440){
-el("finish").textContent="–";
-el("details").textContent="Bitte Uhrzeiten prüfen";
-return null;
+
+const clock=n=>`${String(Math.floor(n/60)%24).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;
+
+const dur=n=>`${n<0?'-':n>0?'+':''}${Math.floor(Math.abs(n)/60)}:${String(Math.abs(n)%60).padStart(2,'0')}`;
+
+function read(){
+  try{
+    let d=JSON.parse(localStorage.getItem(KEY)||'{}');
+    return d&&typeof d==='object'&&!Array.isArray(d)?d:{};
+  }catch{return {}}
 }
-let end=s+t+e-b;
-el("finish").textContent=clock(end);
-el("details").textContent=(e-b)+" Minuten Pause · "+duration(t)+" Stunden netto";
-return {date:el("date").value,start:el("start").value,bs:el("bs").value,be:el("be").value,target:t,pause:e-b,finish:clock(end)};
+
+function persist(){
+  try{
+    localStorage.setItem(KEY,JSON.stringify(db));
+    return true;
+  }catch{
+    alert('Speichern fehlgeschlagen. Bitte Speicherplatz prüfen.');
+    return false;
+  }
 }
+
+function calc(){
+  const s=mins($('start').value),
+        b=mins($('bs').value),
+        e=mins($('be').value),
+        a=mins($('actual').value),
+        t=Number($('target').value);
+
+  const hasPause=Number.isFinite(b)&&Number.isFinite(e);
+  const valid=Number.isFinite(s)&&Number.isFinite(t)&&
+    (!hasPause||b>=s&&e>=b)&&
+    (!Number.isFinite(b)&&!Number.isFinite(e)||hasPause);
+
+  const pause=hasPause?e-b:0;
+  const planned=s+t+pause;
+  const hasActual=Number.isFinite(a);
+  const actualValid=!hasActual||a>=s&&a<1440&&(!hasPause||a>=e);
+  const ok=valid&&actualValid&&planned<1440;
+  const worked=hasActual?a-s-pause:null;
+  const balance=worked===null?null:worked-t;
+
+  $('planned').textContent=ok?clock(planned):'–';
+  $('result').textContent=ok?
+    (hasActual?`Ist: ${dur(worked)} Std. · Saldo: ${dur(balance)} Std.`:
+    `Soll: ${dur(t)} Std. · Pause: ${pause} Min.`):
+    'Bitte Uhrzeiten prüfen (keine Schicht über Mitternacht).';
+
+  const check=hasActual?worked:t;
+  const required=check>540?45:check>360?30:0;
+  const warn=ok&&required>pause;
+
+  $('breakWarning').classList.toggle('hidden',!warn);
+  $('breakWarning').textContent=warn?
+    `Pausenhinweis: Bei ${dur(check)} Stunden Arbeit sind grundsätzlich mindestens ${required} Minuten Pause erforderlich; erfasst sind ${pause} Minuten.`:'';
+
+  return ok?{
+    date:$('date').value,
+    start:$('start').value,
+    bs:$('bs').value,
+    be:$('be').value,
+    target:t,
+    pause,
+    finish:clock(planned),
+    actual:hasActual?$('actual').value:'',
+    worked,
+    balance
+  }:null;
+}
+
+function stamp(id){
+  const d=new Date();
+  $(id).value=`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  calc();
+}
+
 function save(){
-let item=calculate();
-if(!item||!item.date)return alert("Bitte gültige Daten eingeben.");
-let all=data();all[item.date]=item;
-try{localStorage.setItem(key,JSON.stringify(all));alert("Arbeitstag gespeichert!")}
-catch{alert("Speichern nicht möglich.")}
-render();
+  const x=calc();
+  if(!x||!/^\d{4}-\d\d-\d\d$/.test(x.date))
+    return alert('Bitte gültige Daten eingeben.');
+  db[x.date]=x;
+  if(persist())alert('Arbeitstag gespeichert.');
+  render();
 }
-function reset(){
-el("date").value=today();
-el("start").value="08:18";el("bs").value="12:05";el("be").value="12:40";el("target").value="480";
-calculate();
+
+function newDay(){
+  $('date').value=dateToday();
+  ['start','bs','be','actual'].forEach(x=>$(x).value='');
+  $('target').value='480';
+  calc();
 }
-function tab(name){
-el("today").classList.toggle("hidden",name!=="today");
-el("month").classList.toggle("hidden",name!=="month");
-el("tab1").classList.toggle("active",name==="today");
-el("tab2").classList.toggle("active",name==="month");
-if(name==="month")render();
+
+function tab(v){
+  $('day').classList.toggle('hidden',v!=='day');
+  $('month').classList.toggle('hidden',v!=='month');
+  $('tabDay').classList.toggle('active',v==='day');
+  $('tabMonth').classList.toggle('active',v==='month');
+  if(v==='month')render();
 }
-function rows(){
-return Object.values(data()).filter(x=>x.date.startsWith(el("monthPicker").value)).sort((a,b)=>b.date.localeCompare(a.date));
+
+function items(){
+  return Object.values(db)
+    .filter(x=>x&&typeof x.date==='string'&&x.date.startsWith($('monthPicker').value))
+    .sort((a,b)=>b.date.localeCompare(a.date));
 }
+
+function actualData(x){
+  const s=mins(x.start),a=mins(x.actual),p=Number(x.pause)||0;
+  return Number.isFinite(s)&&Number.isFinite(a)&&a>=s?a-s-p:null;
+}
+
 function render(){
-let list=rows();
-el("days").textContent=list.length;
-el("hours").textContent=duration(list.reduce((a,x)=>a+x.target,0));
-el("breaks").textContent=duration(list.reduce((a,x)=>a+x.pause,0));
-el("entries").replaceChildren();
-if(!list.length){el("entries").textContent="Noch keine Einträge vorhanden.";return}
-list.forEach(x=>{
-let div=document.createElement("div");div.className="entry";
-let info=document.createElement("div");
-let name=document.createElement("strong");name.textContent=x.date.split("-").reverse().join(".");
-let desc=document.createElement("small");desc.textContent=x.start+" – "+x.finish+" · "+duration(x.target)+" Std.";
-info.append(name,desc);
-let controls=document.createElement("div");
-let edit=document.createElement("button");edit.textContent="✎";edit.onclick=()=>editDay(x.date);
-let del=document.createElement("button");del.textContent="✕";del.onclick=()=>removeDay(x.date);
-controls.append(edit,del);div.append(info,controls);el("entries").append(div);
-});
+  const xs=items();
+  $('days').textContent=xs.length;
+  $('targetHours').textContent=dur(xs.reduce((n,x)=>n+(Number(x.target)||0),0)).replace(/^\+/,'');
+
+  let withActual=xs.filter(x=>actualData(x)!==null);
+
+  $('actualHours').textContent=dur(withActual.reduce((n,x)=>n+actualData(x),0)).replace(/^\+/,'');
+  $('balance').textContent=dur(withActual.reduce((n,x)=>n+actualData(x)-(Number(x.target)||0),0));
+
+  $('entries').replaceChildren();
+
+  if(!xs.length){
+    $('entries').textContent='Noch keine Einträge vorhanden.';
+    return;
+  }
+
+  xs.forEach(x=>{
+    let div=document.createElement('div');
+    div.className='entry';
+
+    let info=document.createElement('div');
+    let name=document.createElement('strong');
+    name.textContent=x.date.split('-').reverse().join('.');
+
+    let detail=document.createElement('small');
+    const worked=actualData(x);
+    detail.textContent=`${x.start} – ${x.actual||x.finish||'–'} · ${worked===null?'Istzeit offen':dur(worked).replace(/^\+/,'')+' Std. · '+dur(worked-(Number(x.target)||0))}`;
+
+    info.append(name,detail);
+
+    let actions=document.createElement('div');
+    let edit=document.createElement('button');
+    edit.textContent='✎';
+    edit.className='secondary';
+    edit.setAttribute('aria-label','Eintrag bearbeiten');
+    edit.onclick=()=>editDay(x.date);
+
+    let del=document.createElement('button');
+    del.textContent='✕';
+    del.className='secondary';
+    del.setAttribute('aria-label','Eintrag löschen');
+    del.onclick=()=>removeDay(x.date);
+
+    actions.append(edit,del);
+    div.append(info,actions);
+    $('entries').append(div);
+  });
 }
+
 function editDay(date){
-let x=data()[date];if(!x)return;
-el("date").value=x.date;el("start").value=x.start;el("bs").value=x.bs;el("be").value=x.be;el("target").value=x.target;
-calculate();tab("today");
+  const x=db[date];
+  if(!x)return;
+
+  $('date').value=x.date;
+  $('start').value=x.start||'';
+  $('bs').value=x.bs||'';
+  $('be').value=x.be||'';
+  $('target').value=String(x.target||480);
+  $('actual').value=x.actual||'';
+
+  tab('day');
+  calc();
 }
+
 function removeDay(date){
-if(!confirm("Eintrag wirklich löschen?"))return;
-let all=data();delete all[date];localStorage.setItem(key,JSON.stringify(all));render();
+  if(!confirm(`Eintrag vom ${date} löschen?`))return;
+  delete db[date];
+  persist();
+  render();
 }
+
+function download(name,content,type){
+  const blob=new Blob([content],{type});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;
+  a.download=name;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+
 function exportCSV(){
-let list=rows();if(!list.length)return alert("Keine Einträge vorhanden.");
-let lines=["Datum;Arbeitsbeginn;Pausenbeginn;Pausenende;Pause Minuten;Soll Minuten;Feierabend"];
-list.forEach(x=>lines.push([x.date,x.start,x.bs,x.be,x.pause,x.target,x.finish].join(";")));
-let blob=new Blob(["\ufeff"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
-let a=document.createElement("a");a.href=URL.createObjectURL(blob);
-a.download="Arbeitszeit-"+el("monthPicker").value+".csv";a.click();
-setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  const xs=items();
+  if(!xs.length)return alert('Keine Einträge in diesem Monat.');
+
+  const lines=['Datum;Arbeitsbeginn;Pausenbeginn;Pausenende;Pause_Min;Soll_Min;Geplanter_Feierabend;Tatsaechlicher_Feierabend;Ist_Min;Saldo_Min'];
+
+  xs.forEach(x=>{
+    const w=actualData(x);
+    lines.push([
+      x.date,x.start,x.bs,x.be,x.pause,x.target,
+      x.finish,x.actual||'',w??'',w===null?'':w-Number(x.target)
+    ].join(';'));
+  });
+
+  download(`Arbeitszeit-${$('monthPicker').value}.csv`,
+    '\ufeff'+lines.join('\r\n'),'text/csv;charset=utf-8');
 }
-["start","bs","be","target"].forEach(id=>el(id).addEventListener("change",calculate));
-el("date").value=today();el("monthPicker").value=today().slice(0,7);calculate();
+
+function backup(){
+  download(`Arbeitszeit-Backup-${dateToday()}.json`,
+    JSON.stringify({
+      app:'Meine Arbeitszeit',
+      version:2,
+      exportedAt:new Date().toISOString(),
+      records:db
+    },null,2),'application/json');
+}
+
+async function restore(ev){
+  const f=ev.target.files?.[0];
+  if(!f)return;
+
+  try{
+    const payload=JSON.parse(await f.text());
+    const incoming=payload&&payload.records;
+
+    if(payload.app!=='Meine Arbeitszeit'||!incoming||
+       typeof incoming!=='object'||Array.isArray(incoming))
+      throw Error('Keine gültige Arbeitszeit-Backup-Datei');
+
+    const entries=Object.entries(incoming);
+
+    if(!entries.every(([k,v])=>
+      /^\d{4}-\d{2}-\d{2}$/.test(k)&&
+      v&&v.date===k&&typeof v.start==='string'))
+      throw Error('Ungültige Einträge');
+
+    const overlaps=entries.filter(([k])=>k in db).length;
+
+    if(!confirm(`${entries.length} Einträge importieren? ${overlaps} vorhandene Einträge mit gleichem Datum werden überschrieben.`))
+      return;
+
+    db={...db,...incoming};
+
+    if(persist()){
+      $('status').textContent=`Import erfolgreich: ${entries.length} Einträge.`;
+      render();
+    }
+  }catch(err){
+    alert('Import fehlgeschlagen: '+err.message);
+  }finally{
+    ev.target.value='';
+  }
+}
+
+['date','start','bs','be','actual','target'].forEach(id=>
+  $(id).addEventListener('change',calc)
+);
+
+db=read();
+newDay();
+$('monthPicker').value=dateToday().slice(0,7);
+render();
+
+if('serviceWorker'in navigator)
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body>
 </html>
