@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1769aa">
+<title>Meine Arbeitszeit</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:20px 12px;background:#edf3f9;color:#17283b;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:480px;margin:auto;background:white;padding:22px;border-radius:22px;box-shadow:0 5px 25px #0001}
+h1{font-size:23px;margin:0 0 8px}
+h2{font-size:19px}
+small,.hint{color:#68788a}
+nav{display:flex;gap:8px;margin:22px 0}
+button{cursor:pointer;border:0;border-radius:10px;padding:12px;background:#1769aa;color:white;font-size:15px;font-weight:600}
+nav button{flex:1;background:#eaf0f6;color:#36516c}
+nav button.active{background:#1769aa;color:white}
+label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px}
+input,select{width:100%;padding:12px 8px;border:1px solid #cad6e3;border-radius:9px;background:white;font-size:16px;min-width:0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.result{text-align:center;background:#eaf5ff;border-radius:15px;padding:22px 8px;margin:20px 0}
+.result strong{display:block;font-size:42px;color:#1769aa;margin:8px}
+.full{width:100%;margin:6px 0}
+.secondary{background:#eaf0f6;color:#1769aa}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+.stat{background:#f2f6fa;padding:13px;border-radius:12px}
+.stat strong{display:block;font-size:22px;margin-top:6px}
+.entry{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 0;border-bottom:1px solid #e5ebf0}
+.entry button{padding:8px;background:#eaf0f6;color:#1769aa}
+.entry small{display:block;margin-top:5px}
+.hidden{display:none}
+.hint{font-size:12px;line-height:1.5;margin-top:20px}
+</style>
+</head>
+<body>
+<main>
+<h1>🕒 Meine Arbeitszeit</h1>
+<small>Dein täglicher Feierabend auf einen Blick</small>
+<nav>
+<button id="tab1" class="active" onclick="tab('today')">Heute</button>
+<button id="tab2" onclick="tab('month')">Monatsübersicht</button>
+</nav>
+
+<section id="today">
+<label>Datum</label>
+<input id="date" type="date">
+<div class="grid">
+<div><label>Arbeitsbeginn</label><input id="start" type="time" value="08:18"></div>
+<div><label>Sollarbeitszeit</label>
+<select id="target">
+<option value="480">8 Stunden</option>
+<option value="450">7,5 Stunden</option>
+<option value="420">7 Stunden</option>
+<option value="360">6 Stunden</option>
+</select></div>
+<div><label>Pausenbeginn</label><input id="bs" type="time" value="12:05"></div>
+<div><label>Pausenende</label><input id="be" type="time" value="12:40"></div>
+</div>
+<div class="result">
+<small>Dein berechneter Feierabend</small>
+<strong id="finish">16:53</strong>
+<small id="details"></small>
+</div>
+<button class="full" onclick="save()">Arbeitstag speichern</button>
+<button class="full secondary" onclick="reset()">Neuen Tag eingeben</button>
+</section>
+
+<section id="month" class="hidden">
+<h2>Monatsübersicht</h2>
+<label>Monat auswählen</label>
+<input id="monthPicker" type="month" onchange="render()">
+<div class="stats">
+<div class="stat"><small>Erfasste Tage</small><strong id="days">0</strong></div>
+<div class="stat"><small>Sollstunden</small><strong id="hours">0:00</strong></div>
+<div class="stat"><small>Pausen gesamt</small><strong id="breaks">0:00</strong></div>
+<div class="stat"><small>Überstunden</small><strong>–</strong></div>
+</div>
+<div id="entries"></div>
+<button class="full secondary" onclick="exportCSV()">CSV für Excel exportieren</button>
+<p class="hint">Überstunden können erst ermittelt werden, wenn zusätzlich die tatsächliche Endzeit erfasst wird.</p>
+</section>
+<p class="hint">Deine Daten werden lokal auf diesem Gerät gespeichert. Exportiere sie regelmäßig als Sicherung. Beim Löschen der Browserdaten können Einträge verloren gehen.</p>
+</main>
+<script>
+const el=id=>document.getElementById(id);
+const key="arbeitszeit-daten-v1";
+const today=()=>{
+let d=new Date();
+return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+};
+const minutes=s=>{
+if(!/^\d\d:\d\d$/.test(s||""))return NaN;
+let [h,m]=s.split(":").map(Number);
+return h<24&&m<60?h*60+m:NaN;
+};
+const clock=n=>String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0");
+const duration=n=>Math.floor(n/60)+":"+String(n%60).padStart(2,"0");
+function data(){try{return JSON.parse(localStorage.getItem(key))||{}}catch{return {}}}
+function calculate(){
+let s=minutes(el("start").value),b=minutes(el("bs").value),e=minutes(el("be").value),t=Number(el("target").value);
+if(![s,b,e,t].every(Number.isFinite)||s>b||b>e||s+t+e-b>=1440){
+el("finish").textContent="–";
+el("details").textContent="Bitte Uhrzeiten prüfen";
+return null;
+}
+let end=s+t+e-b;
+el("finish").textContent=clock(end);
+el("details").textContent=(e-b)+" Minuten Pause · "+duration(t)+" Stunden netto";
+return {date:el("date").value,start:el("start").value,bs:el("bs").value,be:el("be").value,target:t,pause:e-b,finish:clock(end)};
+}
+function save(){
+let item=calculate();
+if(!item||!item.date)return alert("Bitte gültige Daten eingeben.");
+let all=data();all[item.date]=item;
+try{localStorage.setItem(key,JSON.stringify(all));alert("Arbeitstag gespeichert!")}
+catch{alert("Speichern nicht möglich.")}
+render();
+}
+function reset(){
+el("date").value=today();
+el("start").value="08:18";el("bs").value="12:05";el("be").value="12:40";el("target").value="480";
+calculate();
+}
+function tab(name){
+el("today").classList.toggle("hidden",name!=="today");
+el("month").classList.toggle("hidden",name!=="month");
+el("tab1").classList.toggle("active",name==="today");
+el("tab2").classList.toggle("active",name==="month");
+if(name==="month")render();
+}
+function rows(){
+return Object.values(data()).filter(x=>x.date.startsWith(el("monthPicker").value)).sort((a,b)=>b.date.localeCompare(a.date));
+}
+function render(){
+let list=rows();
+el("days").textContent=list.length;
+el("hours").textContent=duration(list.reduce((a,x)=>a+x.target,0));
+el("breaks").textContent=duration(list.reduce((a,x)=>a+x.pause,0));
+el("entries").replaceChildren();
+if(!list.length){el("entries").textContent="Noch keine Einträge vorhanden.";return}
+list.forEach(x=>{
+let div=document.createElement("div");div.className="entry";
+let info=document.createElement("div");
+let name=document.createElement("strong");name.textContent=x.date.split("-").reverse().join(".");
+let desc=document.createElement("small");desc.textContent=x.start+" – "+x.finish+" · "+duration(x.target)+" Std.";
+info.append(name,desc);
+let controls=document.createElement("div");
+let edit=document.createElement("button");edit.textContent="✎";edit.onclick=()=>editDay(x.date);
+let del=document.createElement("button");del.textContent="✕";del.onclick=()=>removeDay(x.date);
+controls.append(edit,del);div.append(info,controls);el("entries").append(div);
+});
+}
+function editDay(date){
+let x=data()[date];if(!x)return;
+el("date").value=x.date;el("start").value=x.start;el("bs").value=x.bs;el("be").value=x.be;el("target").value=x.target;
+calculate();tab("today");
+}
+function removeDay(date){
+if(!confirm("Eintrag wirklich löschen?"))return;
+let all=data();delete all[date];localStorage.setItem(key,JSON.stringify(all));render();
+}
+function exportCSV(){
+let list=rows();if(!list.length)return alert("Keine Einträge vorhanden.");
+let lines=["Datum;Arbeitsbeginn;Pausenbeginn;Pausenende;Pause Minuten;Soll Minuten;Feierabend"];
+list.forEach(x=>lines.push([x.date,x.start,x.bs,x.be,x.pause,x.target,x.finish].join(";")));
+let blob=new Blob(["\ufeff"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
+let a=document.createElement("a");a.href=URL.createObjectURL(blob);
+a.download="Arbeitszeit-"+el("monthPicker").value+".csv";a.click();
+setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+["start","bs","be","target"].forEach(id=>el(id).addEventListener("change",calculate));
+el("date").value=today();el("monthPicker").value=today().slice(0,7);calculate();
+</script>
+</body>
+</html>
